@@ -70,6 +70,11 @@ tests/                     引擎測試（附一個迷你示範專案）
 uv run --with pytest python -m pytest -q    # 測試
 ```
 
+## 文件
+
+- [PRD](docs/PRD.md)：要解決的問題、不做什麼、成功標準、改版歷程
+- [ADR](docs/adr/)：重要設計決定和理由（為什麼用錨點、為什麼先修程式再教⋯）
+
 ## 授權
 
 MIT
