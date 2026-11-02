@@ -7,8 +7,6 @@ import io
 import keyword
 import tokenize
 
-CLASSES = ("kw", "str", "com", "num", "bi")
-
 
 def highlight(src: str, filename: str = "x.py") -> list:
     lines = _pygments(src, filename)

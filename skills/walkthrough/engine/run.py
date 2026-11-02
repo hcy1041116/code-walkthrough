@@ -44,7 +44,7 @@ def cmd_capture(tools: str, names: list):
     P = load_project(tools)
     for name in names or P.CAPTURES:
         print(f"== {name}")
-        r = subprocess.run([sys.executable, "-W", "error::FutureWarning", os.path.join(P.TOOLS, name)], cwd=P.TOOLS, check=False)
+        r = subprocess.run([sys.executable, "-W", "error::FutureWarning", "-W", "error::RuntimeWarning", os.path.join(P.TOOLS, name)], cwd=P.TOOLS, check=False)
         if r.returncode:
             sys.exit(f"capture failed: {name}")
 

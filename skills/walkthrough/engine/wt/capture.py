@@ -163,6 +163,8 @@ def col_fmt(vals: list, nd: int) -> list:
 
 def tbl(obj, n=None, index=True, nd=4, index_name=None) -> dict:
     """DataFrame / Series -> {'cols': [...], 'rows': [[...]]}, ready to embed."""
+    if pd is None:
+        raise ImportError("tbl() needs pandas; for plain lists use rows(records, cols)")
     df = obj.to_frame() if isinstance(obj, pd.Series) else obj
     if n is not None:
         df = df.head(n)

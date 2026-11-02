@@ -251,7 +251,7 @@ var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').mat
 /* line labels always come from the l array */
 function ranges(l){var a=Array.from(new Set(l)).sort(function(x,y){return x-y;}),o=[],s=a[0],p=a[0];
   for(var i=1;i<=a.length;i++){if(i<a.length&&a[i]===p+1){p=a[i];continue;}o.push(s===p?String(s):s+'–'+p);if(i<a.length){s=p=a[i];}}return o;}
-function lineLabel(l){return fmt(S.line_label,{r:ranges(l).join(S.line_sep)});}
+function lineLabel(l){return fmt(new Set(l).size>1?S.line_label_many:S.line_label,{r:ranges(l).join(S.line_sep)});}
 window.__lineLabel=lineLabel;
 
 function render(key){

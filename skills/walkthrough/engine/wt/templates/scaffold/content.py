@@ -10,7 +10,7 @@ C1 = CH(
            ("def main(", "=return result"),
            [
                S("def main(", "白話說明：這幾行在做什麼、為什麼這樣寫。",
-                 [OUT("ex_print", "輸出")],
+                 [OUT("ex_result", "main() 的回傳值")],
                  cards=[Cloze("def main(", "main")]),
            ]),
     ],

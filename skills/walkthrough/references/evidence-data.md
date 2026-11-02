@@ -54,4 +54,4 @@ Mask passwords in anything you save.
 
 ## Hygiene
 
-Run captures with warnings as errors (`-W error::FutureWarning -W error::RuntimeWarning`, which `run.py capture` does for FutureWarning) and fix the code, not the warning filter. Outputs go to `runs/`; compare them with the project's files rather than overwriting them.
+`run.py capture` runs every capture with FutureWarning and RuntimeWarning as errors; fix the code, not the warning filter. Outputs go to `runs/`; compare them with the project's files rather than overwriting them.

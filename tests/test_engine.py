@@ -35,6 +35,7 @@ def test_anchor_forms():
 def test_line_labels():
     assert line_label([3, 4, 5, 9], "zh-TW") == "第 3–5、9 行"
     assert line_label([7], "en") == "Line 7"
+    assert line_label([3, 4, 5], "en") == "Lines 3–5"
 
 
 @pytest.fixture()
@@ -83,3 +84,23 @@ def test_verify_flags_typed_line_numbers(demo):
                        encoding="utf-8")
     render.render(str(tools))
     assert verify.verify(str(tools)) == 1
+
+
+def test_tbl_without_pandas_points_to_rows(monkeypatch):
+    from wt import capture
+
+    monkeypatch.setattr(capture, "pd", None)
+    with pytest.raises(ImportError, match="rows"):
+        capture.tbl([[1, 2]])
+
+
+def test_scaffold_example_capture_records_a_real_value(tmp_path, monkeypatch):
+    (tmp_path / "main.py").write_text("def main():\n    result = 6 * 7\n    return result\n", encoding="utf-8")
+    tools = tmp_path / "docs" / "walkthrough_tools"
+    monkeypatch.setenv("WT_ENGINE", ENGINE)
+    run = [sys.executable, os.path.join(ENGINE, "run.py")]
+    subprocess.run([*run, "new", str(tools)], capture_output=True, text=True, check=True)
+    r = subprocess.run([*run, "capture", str(tools)], capture_output=True, text=True, check=False)
+    assert r.returncode == 0, r.stdout + r.stderr
+    captured = json.loads((tools / "data" / "cap_example.json").read_text(encoding="utf-8"))
+    assert captured == {"ex_result": "42"}

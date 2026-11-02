@@ -19,6 +19,7 @@ STRINGS = {
         "show_table": "看表格",
         "count": "{k}／{n}",
         "line_label": "第 {r} 行",
+        "line_label_many": "第 {r} 行",
         "line_sep": "、",
         "code_of": "{file} 程式碼",
         "interview": "面試時可以怎麼講這個檔案",
@@ -53,6 +54,7 @@ STRINGS = {
         "hub_reset": "清除進度",
         "hub_reset_confirm": "確定要清除所有複習進度嗎？",
         "hub_boxes": "記憶盒（越右邊越熟）",
+        "hub_box": "第 {n} 盒",
         "card_types": {"cloze": "填空", "choice": "選擇", "recall": "回想"},
         "check": "檢查",
         "reveal": "顯示答案",
@@ -85,6 +87,7 @@ STRINGS = {
         "show_table": "Show table",
         "count": "{k} / {n}",
         "line_label": "Line {r}",
+        "line_label_many": "Lines {r}",
         "line_sep": ", ",
         "code_of": "{file} source",
         "interview": "How to talk about this file in an interview",
@@ -118,6 +121,7 @@ STRINGS = {
         "hub_reset": "Reset progress",
         "hub_reset_confirm": "Reset all review progress?",
         "hub_boxes": "Memory boxes (right = stronger)",
+        "hub_box": "Box {n}",
         "card_types": {"cloze": "Fill in", "choice": "Choice", "recall": "Recall"},
         "check": "Check",
         "reveal": "Show answer",
@@ -145,4 +149,5 @@ def strings(lang: str) -> dict:
 
 def line_label(nums: list, lang: str) -> str:
     s = strings(lang)
-    return s["line_label"].format(r=s["line_sep"].join(ranges(nums)))
+    key = "line_label_many" if len(set(nums)) > 1 else "line_label"
+    return s[key].format(r=s["line_sep"].join(ranges(nums)))

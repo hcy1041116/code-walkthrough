@@ -8,5 +8,6 @@ ws = Workspace(__file__)
 os.chdir(ws.run_dir("example", []))    # scratch folder; list the project files it needs as symlinks
 R = ws.runner("main.py")
 O = {}
-O["ex_print"] = R.run("def main(", "=return result").strip() or "(no output)"
+R.run("def main(", "=return result")   # running a def only defines main() ...
+O["ex_result"] = repr(R["main"]())     # ... so call it and record what it returns
 ws.save("cap_example.json", O)
