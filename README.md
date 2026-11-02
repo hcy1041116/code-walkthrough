@@ -20,6 +20,26 @@
 2. **複習卡**：從真實程式挖空的填空題、觀念選擇題、需要自己組織答案的回想卡；面試題也自動變成回想卡。
 3. **複習中心**（`~/learning/hub/index.html`）：所有專案的卡片放在一起，用 Leitner 記憶盒排程（1、3、7、16、35 天），進度存在瀏覽器，可以匯出備份。
 
+## 示範
+
+[`examples/sales`](examples/sales) 是一支 18 行的 pandas 報表程式（虛構的 12 筆訂單），用這個 skill 產生的教材長這樣：
+
+![逐行講解頁：按「下一段」標出正在講的程式，下面是說明和實際執行時的資料](docs/images/walkthrough.gif)
+
+複習中心：填空題挖的是真實程式碼，答完會說明理由、連回講解；選擇題的選項會洗牌。
+
+![複習中心：填空題和選擇題](docs/images/review.gif)
+
+| 手機、深色模式 | 複習中心首頁 |
+|---|---|
+| <img src="docs/images/walkthrough-mobile-dark.png" width="260" alt="手機寬度、深色模式的講解頁"> | <img src="docs/images/review-home.png" width="480" alt="複習中心首頁：今天到期、新卡、記憶盒分布"> |
+
+自己產生一次（不會動到你的 `~/learning`）：
+
+```bash
+uv run --with pygments --with pandas --with pillow python examples/make_readme_images.py
+```
+
 ## 安裝
 
 ```bash
@@ -50,7 +70,7 @@ python $WT verify docs/walkthrough_tools   # 自我檢查
 
 ## 自我檢查做了什麼
 
-`verify` 會確認：頁面上每一行程式和原始檔逐字相同；「第 X–Y 行」由頁面自己的 JavaScript 產生後和 Python 端一致；說明裡沒有手寫行號；說明引用的程式碼都出現在標示的那幾行；填空題的答案就在那一行的那個位置；選擇題的選項長度不會洩漏答案。
+`verify` 會確認：頁面上每一行程式和原始檔逐字相同；頁面的腳本能正常解析，「第 X–Y 行」由頁面自己的 JavaScript 產生後和 Python 端一致；說明裡沒有手寫行號；說明引用的程式碼都出現在標示的那幾行；填空題的答案就在那一行的那個位置；選擇題的選項長度不會洩漏答案。
 
 ## 結構
 
@@ -62,6 +82,7 @@ skills/walkthrough/
   engine/wt/               錨點、擷取、語法上色、產生頁面、自我檢查、複習中心
   templates/learning/      ~/learning 的 PROFILE.md、GLOSSARY.md 範本
 tests/                     引擎測試（附一個迷你示範專案）
+examples/sales/            README 示範用的報表程式和它的教材設定（虛構資料）
 ```
 
 需要 Python 3.10 以上。選用：Pygments（任何語言的語法上色，沒裝時 Python 檔用內建分析）、Node.js（自我檢查時比對頁面上的 JavaScript）、無頭瀏覽器（截圖）。
