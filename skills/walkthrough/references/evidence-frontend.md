@@ -5,7 +5,7 @@ For web UIs (React, Vue, Svelte, plain JS): the evidence is what the screen, the
 ## Run the UI
 
 - Build and serve the app locally (`npm run dev` / `npm run build && npm run preview`) on a scratch port, against a mock or scratch backend.
-- Drive it with a headless browser. Playwright (Python or Node) is the most capable: navigate, click, type, wait, screenshot, read the DOM, record network requests. Without it, Chromium's headless shell can still screenshot a static state: `chrome-headless-shell --headless --screenshot=out.png --window-size=1280,900 --virtual-time-budget=5000 URL`; inject a small script into a copy of the page to reach a state (click, type) before the shot.
+- Drive it with a headless browser. Playwright (Python or Node) is the most capable: navigate, click, type, wait, screenshot, read the DOM, record network requests. Without it, Chromium's headless shell can still screenshot a static state: `chrome-headless-shell --headless --screenshot=out.png --window-size=1280,900 --virtual-time-budget=5000 URL`; inject a small script into a copy of the page to reach a state (click, type) before the shot. The headless shell does not repaint after scrolling, so a shot of a mid-page section comes out blank: move that section to the top of the page with the injected script instead of scrolling to it.
 
 ## What to capture per step
 

@@ -150,11 +150,13 @@ function count(deck){var due=0,nw=0,learned=0,boxes=[0,0,0,0,0,0];
   ALL.forEach(function(c){if(deck&&c._deck!==deck)return;var s=st(c);
     if(!s){nw++;boxes[0]++;}else{learned++;boxes[s.b]++;if(s.d<=today())due++;}});
   return {due:due,nw:nw,learned:learned,boxes:boxes};}
-function newLeft(){return Math.max(0,(store.settings.newPerDay||20)-(store.meta.newToday||0));}
+function newPerDay(){var n=store.settings.newPerDay;return typeof n==='number'?n:20;}  // 0 is a real choice: reviews only
+function newLeft(){return Math.max(0,newPerDay()-(store.meta.newToday||0));}
 function queue(){var pool=ALL.filter(function(c){return selected.has(c._deck.project);});
+  // due cards first, most overdue first; sort is stable, so cards due the same day keep the shuffled (deck-mixed) order
   var due=shuffle(pool.filter(isDue)).sort(function(a,b){return st(a).d<st(b).d?-1:st(a).d>st(b).d?1:0;});
   var fresh=shuffle(pool.filter(function(c){return !st(c);})).slice(0,newLeft());
-  return shuffle(due.concat(fresh));}
+  return due.concat(fresh);}
 function grade(c,res){var isNew=!st(c);store.cards[c.id]=nextState(st(c),res,today());
   if(isNew)store.meta.newToday=(store.meta.newToday||0)+1;save();}
 
@@ -177,7 +179,7 @@ function home(){
       '<span class="meta">'+esc(S.hub_due)+' '+c.due+' · '+esc(S.hub_new)+' '+c.nw+' · '+esc(S.hub_total)+' '+d.cards.length+'</span>'+
       (d.href?'<a href="'+esc(d.href)+'" target="_blank" rel="noopener">'+esc(S.hub_open)+'</a>':'')+'</li>';}).join('')+'</ul></div>';
   h+='<div class="card"><p class="h">'+esc(S.hub_boxes)+'</p>'+boxBar(tot.boxes)+'</div>';
-  h+='<div class="card settings row"><label>'+esc(S.hub_new_limit)+' <input type="number" min="0" max="500" id="limit" value="'+(store.settings.newPerDay||20)+'"></label>'+
+  h+='<div class="card settings row"><label>'+esc(S.hub_new_limit)+' <input type="number" min="0" max="500" id="limit" value="'+newPerDay()+'"></label>'+
      '<button class="btn" id="exp">'+esc(S.hub_export)+'</button><label class="btn">'+esc(S.hub_import)+'<input type="file" id="imp" accept="application/json" hidden></label>'+
      '<button class="btn" id="reset">'+esc(S.hub_reset)+'</button></div>';
   $('#app').innerHTML=h;

@@ -32,6 +32,13 @@ def test_anchor_forms():
         anchors.resolve(LINES, ("x = f", "def f"))
 
 
+def test_anchor_ending_in_hash_digits_says_how_to_match_it_literally():
+    css = ["a { color: #333; }"]
+    with pytest.raises(ValueError, match="#1"):
+        anchors.find(css, "color: #333")
+    assert anchors.find(css, "color: #333#1") == 1
+
+
 def test_line_labels():
     assert line_label([3, 4, 5, 9], "zh-TW") == "第 3–5、9 行"
     assert line_label([7], "en") == "Line 7"
@@ -68,6 +75,49 @@ def test_render_verify_and_hub(demo):
     assert (learning / "hub" / "index.html").exists()
 
 
+def test_data_read_by_env_is_not_reported_unused(demo, capsys):
+    _, tools, _ = demo
+    render.render(str(tools))  # the demo's ENV() reads g_python
+    assert "unused" not in capsys.readouterr().out
+
+
+def test_verify_lists_wildcard_matched_references(demo, capsys):
+    _, tools, _ = demo
+    content = tools / "content.py"
+    content.write_text(content.read_text(encoding="utf-8").replace("Loops over `NAMES`.", "Loops over `NAMES` with `greet(名字, excited=True)`."),
+                       encoding="utf-8")
+    render.render(str(tools))
+    assert verify.verify(str(tools)) == 0
+    assert "`greet(名字, excited=True)`" in capsys.readouterr().out
+
+
+def test_verify_ignores_page_javascript_quoted_in_the_content(demo):
+    _, tools, _ = demo
+    content = tools / "content.py"
+    content.write_text(content.read_text(encoding="utf-8").replace("Loops over `NAMES`.", "Loops over `NAMES`, unlike function ranges(l){ in the page."),
+                       encoding="utf-8")
+    render.render(str(tools))
+    assert verify.verify(str(tools)) == 0
+
+
+def test_placeholder_text_in_the_content_is_kept_as_written(demo):
+    proj, tools, _ = demo
+    content = tools / "content.py"
+    content.write_text(content.read_text(encoding="utf-8").replace("Loops over `NAMES`.", "Loops over `NAMES`; __S__ and __TITLE__ stay as written."),
+                       encoding="utf-8")
+    render.render(str(tools))
+    assert "__S__ and __TITLE__ stay as written." in (proj / "docs" / "walkthrough.html").read_text(encoding="utf-8")
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="needs node")
+def test_verify_flags_a_page_script_that_does_not_parse(demo):
+    proj, tools, _ = demo
+    render.render(str(tools))
+    page = proj / "docs" / "walkthrough.html"
+    page.write_text(page.read_text(encoding="utf-8").replace("var CD=", "var CD=;"), encoding="utf-8")
+    assert verify.verify(str(tools)) == 1
+
+
 def test_cloze_blank_must_be_unique(demo):
     _, tools, _ = demo
     content = tools / "content.py"
@@ -84,6 +134,41 @@ def test_verify_flags_typed_line_numbers(demo):
                        encoding="utf-8")
     render.render(str(tools))
     assert verify.verify(str(tools)) == 1
+
+
+def test_run_dir_links_files_inside_subfolders(demo):
+    from wt.capture import Workspace
+
+    proj, tools, _ = demo
+    run = Workspace(str(tools / "cap_greet.py")).run_dir("nested", ["src/greet.py"])
+    assert os.path.realpath(os.path.join(run, "src", "greet.py")) == os.path.realpath(proj / "src" / "greet.py")
+
+
+def test_runner_errors_point_at_the_real_line(tmp_path):
+    import traceback
+
+    from wt.capture import Runner
+
+    src = tmp_path / "m.py"
+    src.write_text("a = 1\nb = 2\nc = 1 / 0\n", encoding="utf-8")
+    with pytest.raises(ZeroDivisionError) as e:
+        Runner(str(src)).run("b = 2", "c = 1 / 0")
+    last = traceback.extract_tb(e.value.__traceback__)[-1]
+    assert (last.filename, last.lineno, last.line) == (str(src), 3, "c = 1 / 0")
+
+
+def test_infinite_values_print_like_pandas():
+    from wt.capture import fv
+
+    assert [fv(float("inf")), fv(float("-inf"))] == ["inf", "-inf"]
+
+
+def test_date_columns_print_like_pandas():
+    pd = pytest.importorskip("pandas")
+    from wt.capture import tbl
+
+    df = pd.DataFrame({"day": pd.to_datetime(["2026-01-05", None]), "at": pd.to_datetime(["2026-01-05 08:30", "2026-01-06 00:00"])})
+    assert tbl(df, index=False)["rows"] == [["2026-01-05", "2026-01-05 08:30:00"], ["NaT", "2026-01-06 00:00:00"]]
 
 
 def test_tbl_without_pandas_points_to_rows(monkeypatch):

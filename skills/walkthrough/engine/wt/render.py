@@ -6,6 +6,7 @@ import json
 import mimetypes
 import os
 import re
+from collections.abc import Mapping
 from datetime import date
 
 from . import anchors, hub
@@ -24,6 +25,22 @@ def esc(x) -> str:
 
 def learning_dir() -> str:
     return os.path.expanduser(os.environ.get("WT_LEARNING", "~/learning"))
+
+
+class DataView(Mapping):
+    """The captured data as project.ENV() sees it: every key it reads counts as used."""
+
+    def __init__(self, renderer: "Renderer"):
+        self.r = renderer
+
+    def __getitem__(self, key):
+        return self.r.data(key)
+
+    def __iter__(self):
+        return iter(self.r.O)
+
+    def __len__(self):
+        return len(self.r.O)
 
 
 class Renderer:
@@ -331,12 +348,12 @@ class Renderer:
         if cards:
             href = os.path.relpath(os.path.join(hub_dir, "index.html"), os.path.dirname(out_html)) + f"#deck={P.PROJECT}"
             review = f'<p class="review-link"><a href="{esc(href)}">{esc(S["review_link"].format(n=len(cards)))}</a></p>'
-        env = P.ENV(self.O) if hasattr(P, "ENV") else ""
+        env = P.ENV(DataView(self)) if hasattr(P, "ENV") else ""
         charts = {name: self.chart_data(spec) for name, spec in getattr(P, "CHARTS", {}).items()}
         with open(os.path.join(ENGINE, "templates", "walkthrough.html"), encoding="utf-8") as f:
             page = f.read()
         js = lambda v: json.dumps(v, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-        for k, val in {
+        fill = {
             "__LANG__": self.lang, "__TITLE__": esc(P.TITLE), "__KICKER__": esc(getattr(P, "KICKER", "")), "__LEAD__": P.LEAD,
             "__FLOW__": f'<div class="flow">{flow}</div>' if flow else "",
             "__HOWTO__": "".join(f"<li>{esc(h)}</li>" for h in S["howto"]),
@@ -344,8 +361,9 @@ class Renderer:
             "__INDEX__": idx, "__NAV__": "".join(nav), "__BODY__": "".join(body), "__FOOTER__": esc(S["footer"]),
             "__TOC__": esc(S["toc"]), "__TOCBTN__": esc(S["toc_button"]), "__THEME__": esc(S["theme"]["auto"]),
             "__STEPS__": js(js_steps), "__CHARTS__": js(charts), "__S__": js(S),
-        }.items():
-            page = page.replace(k, val)
+        }
+        # one pass over the template: text filled in is never scanned again, so content may contain "__S__" etc.
+        page = re.sub(r"__[A-Z]+__", lambda m: fill.get(m.group(0), m.group(0)), page)
         os.makedirs(os.path.dirname(out_html), exist_ok=True)
         with open(out_html, "w", encoding="utf-8") as f:
             f.write(page)

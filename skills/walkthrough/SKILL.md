@@ -37,12 +37,12 @@ Learner data lives outside every repo, in `~/learning/` (override with `WT_LEARN
    Done when: every number, table, screenshot or response the text will mention exists in `data/cap_*.json` from a real run, with zero warnings, and the project's own files are untouched.
 
 4. **Write the content** per [references/content.md](references/content.md): one `content_chN.py` per chapter; a step per logical block of code; segments that explain *why*, bridge new ideas through the strengths in PROFILE.md, use GLOSSARY.md terms, and quote only captured numbers; an interview section closing each chapter.
-   Done when: every line of every taught file belongs to a step, and every claim about data names the captured key it comes from.
+   Done when: every line of a file chapter belongs to a step, every hop of a flow chapter has a step, and every claim about data names the captured key it comes from.
 
 5. **Write the cards** per [references/cards.md](references/cards.md): cloze on real lines for syntax worth recalling, choice for concepts and decisions, recall for reasoning.
    Done when: every step has at least one card, and every audit finding and every concept segment has one.
 
-6. **Render and verify.** `$PY $WT render <tools>`, then `$PY $WT verify <tools> --list`. Fix every problem; for each flagged code reference either correct the anchor or, once you have confirmed it is deliberate (an old version, a usage pattern), list it in that segment's `ext`. Screenshot the page and the hub with a headless browser in light mode, dark mode and at about 390 px wide, and look at the screenshots.
+6. **Render and verify.** `$PY $WT render <tools>`, then `$PY $WT verify <tools> --list`. Fix every problem; for each flagged code reference either correct the anchor or, once you have confirmed it is deliberate (an old version, a usage pattern), list it in that segment's `ext`. Screenshot the page and the hub with a headless browser in light mode, dark mode and at about 390 px wide ([how](references/evidence-frontend.md)), and look at the screenshots.
    Done when: verify exits 0 with no warnings, the screenshots look right, and every number in the text has been re-checked against the captured data.
 
 7. **Hand over.** Add the new terms to `~/learning/GLOSSARY.md`. Tell the user where the page is and how to open it (WSL: `explorer.exe "$(wslpath -w <page>)"`), that the hub is `~/learning/hub/index.html`, what the audit found and fixed, and what is left for them (commits, deploys, tools you could not run).

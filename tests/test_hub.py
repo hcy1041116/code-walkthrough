@@ -65,7 +65,7 @@ CARD = {"type": "cloze", "deck": "t", "file": "x.py", "link": "#c1-s1-1", "where
         "lines": [[1, "y = f(axis=1)"]], "blank": [0, 6, 6], "answer": "axis=1", "also": [], "hint": "", "why": "why"}
 
 
-def hub_page(tmp_path, lang, before_js="", after_js=""):
+def hub_page(tmp_path, lang, before_js="", after_js="", cards=(CARD,)):
     """Build a hub with one deck, add test scripts around the page's own script, and return the rendered DOM."""
     import sys
 
@@ -74,7 +74,7 @@ def hub_page(tmp_path, lang, before_js="", after_js=""):
 
     learning = tmp_path / "learning"
     (learning / "decks").mkdir(parents=True)
-    deck = {"project": "t", "title": "Test deck", "lang": lang, "walkthrough": str(tmp_path / "none.html"), "built": "2026-01-01", "cards": [CARD]}
+    deck = {"project": "t", "title": "Test deck", "lang": lang, "walkthrough": str(tmp_path / "none.html"), "built": "2026-01-01", "cards": list(cards)}
     (learning / "decks" / "t.json").write_text(json.dumps(deck), encoding="utf-8")
     page = (learning / "hub" / "index.html") if hub.build(str(learning)) else None
     html = page.read_text(encoding="utf-8")
@@ -111,3 +111,28 @@ def test_accepting_a_typo_moves_the_card_up_from_its_previous_box(tmp_path):
 def test_box_labels_follow_the_deck_language(tmp_path):
     dom = hub_page(tmp_path, "zh-TW")
     assert "第 1 盒" in dom and "Box 1" not in dom
+
+
+@needs_chrome
+def test_due_cards_come_before_new_cards(tmp_path):
+    new = {**CARD, "id": "t:new", "where": "new card"}
+    due = {**CARD, "id": "t:due", "where": "due card"}
+    before = TODAY_JS + ("Math.random=function(){return 0;};"  # a fixed shuffle, so the order is reproducible
+                         "localStorage.setItem('wt-review-v1',JSON.stringify({cards:{'t:due':{b:3,r:2,l:0,d:'2000-01-01',s:'1999-12-01'}},"
+                         "meta:{day:today,newToday:0},settings:{newPerDay:20}}));")
+    after = ("document.getElementById('start').click();"
+             "document.body.insertAdjacentHTML('beforeend','<pre id=\"result\">'+document.querySelector('.where').textContent+'</pre>');")
+    dom = hub_page(tmp_path, "en", before, after, cards=[new, due])
+    assert result(dom).endswith("due card")
+
+
+@needs_chrome
+def test_zero_new_cards_per_day_means_reviews_only(tmp_path):
+    new = {**CARD, "id": "t:new", "where": "new card"}
+    due = {**CARD, "id": "t:due", "where": "due card"}
+    before = TODAY_JS + ("localStorage.setItem('wt-review-v1',JSON.stringify({cards:{'t:due':{b:3,r:2,l:0,d:'2000-01-01',s:'1999-12-01'}},"
+                         "meta:{day:today,newToday:0},settings:{newPerDay:0}}));")
+    after = ("var limit=document.getElementById('limit').value;document.getElementById('start').click();"
+             "document.body.insertAdjacentHTML('beforeend','<pre id=\"result\">'+limit+' | '+document.querySelector('.sbar span').textContent+'</pre>');")
+    dom = hub_page(tmp_path, "en", before, after, cards=[new, due])
+    assert result(dom) == "0 | Card 1 / 1"

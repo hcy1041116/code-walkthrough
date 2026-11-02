@@ -1,5 +1,5 @@
-"""Self-check a rendered walkthrough: shown code == source, line labels agree between Python and the page's
-own JavaScript, no hand-written line numbers, code references sit on the highlighted lines, cards are sound."""
+"""Self-check a rendered walkthrough: shown code == source, the page's script parses and its line labels agree
+with Python's, no hand-written line numbers, code references sit on the highlighted lines, cards are sound."""
 import html
 import json
 import os
@@ -50,12 +50,21 @@ def verify(tools_dir: str, listing: bool = False) -> int:
             elif not set(sub["l"]) <= set(shown):
                 problems.append(f"{s['key']}-{k}: highlighted lines are not in the shown code")
 
-    # 2. the page's own JavaScript produces the same line labels as Python
-    if shutil.which("node"):
+    # 2. the page's own JavaScript parses and produces the same line labels as Python
+    run_js = bool(shutil.which("node"))
+    if run_js:
+        script = page[page.rfind("<script>") + len("<script>"):page.rfind("</script>")]
+        parsed = subprocess.run(["node", "-e", "new Function(require('fs').readFileSync(0,'utf8'))"], input=script,
+                                capture_output=True, text=True, check=False)
+        if parsed.returncode:
+            err = next((ln for ln in parsed.stderr.splitlines() if "Error" in ln), parsed.stderr.strip())
+            problems.append(f"the page's script does not parse, so the page shows no code: {err}")
+            run_js = False
+    if run_js:
         js = "\n".join([
             "var S=" + re.search(r"\nvar S=(\{.*?\});\n", page, re.DOTALL).group(1) + ";",
             re.search(r"\n(var fmt=function.*?;)\n", page).group(1),
-            re.search(r"(function ranges\(l\)\{.*?\nfunction lineLabel\(l\)\{[^\n]*)", page, re.DOTALL).group(1),
+            re.search(r"\n(function ranges\(l\)\{.*?\nfunction lineLabel\(l\)\{[^\n]*)", page, re.DOTALL).group(1),
             "const L=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(JSON.stringify(L.map(lineLabel)));",
         ])
         out = subprocess.run(["node", "-e", js], input=json.dumps([d["l"] for d in subs]), capture_output=True, text=True, check=True)
@@ -64,7 +73,7 @@ def verify(tools_dir: str, listing: bool = False) -> int:
             if jl != d["label"]:
                 problems.append(f"{d['key']}: page shows {jl!r} but Python computed {d['label']!r}")
     else:
-        warnings.append("node not found: skipped the JavaScript line-label check")
+        warnings.append("node not found or the page's script broken: skipped the JavaScript line-label check")
         for d in subs:
             d["js"] = d["label"]
 
@@ -108,6 +117,8 @@ def verify(tools_dir: str, listing: bool = False) -> int:
     for m in misses:
         print("  ?", m)
     print(f"template-style references (wildcard match): {len(templ)}")
+    for t in templ:
+        print("  ~", t)
     for w in warnings:
         print("  !", w)
     if listing:

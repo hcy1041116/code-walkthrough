@@ -74,6 +74,7 @@ class Workspace:
         for f in links:
             dst = os.path.join(d, f)
             if not os.path.lexists(dst):
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
                 os.symlink(os.path.join(self.repo, f), dst)
         return d
 
@@ -109,7 +110,8 @@ class Runner:
         buf = io.StringIO()
         t0 = time.time()
         with contextlib.redirect_stdout(buf):
-            exec(compile(code, f"{self.path}:{a}-{b}", "exec"), self.ns)  # noqa: S102  (running the project's own source is the point)
+            # blank lines in front keep line numbers real, so tracebacks point at the file's own lines
+            exec(compile("\n" * (a - 1) + code, self.path, "exec"), self.ns)  # noqa: S102  (running the project's own source is the point)
         print(f"  ran {os.path.basename(self.path)}:{a}-{b} ({time.time() - t0:.1f}s)", flush=True)
         return buf.getvalue()
 
@@ -133,8 +135,8 @@ def fv(v, nd: int = 4) -> str:
         return str(int(v))
     if _is_float(v):
         v = float(v)
-        if math.isnan(v):
-            return "NaN"
+        if not math.isfinite(v):
+            return "NaN" if math.isnan(v) else str(v)
         if v == int(v) and abs(v) < 1e12:
             return f"{v:.1f}"
         s = f"{round(v, nd):.{nd}f}".rstrip("0").rstrip(".")
@@ -161,6 +163,15 @@ def col_fmt(vals: list, nd: int) -> list:
     return out
 
 
+def column(s, nd: int) -> list:
+    """One pandas column -> display strings: dates without a time of day print as dates, like pandas."""
+    if pd.api.types.is_datetime64_any_dtype(s):
+        known = s.dropna()
+        dates_only = bool((known == known.dt.normalize()).all())
+        return ["NaT" if pd.isna(v) else v.strftime("%Y-%m-%d") if dates_only else str(v) for v in s]
+    return col_fmt(list(s), nd)
+
+
 def tbl(obj, n=None, index=True, nd=4, index_name=None) -> dict:
     """DataFrame / Series -> {'cols': [...], 'rows': [[...]]}, ready to embed."""
     if pd is None:
@@ -169,11 +180,11 @@ def tbl(obj, n=None, index=True, nd=4, index_name=None) -> dict:
     if n is not None:
         df = df.head(n)
     cols = [str(c) for c in df.columns]
-    data = [col_fmt(list(df.iloc[:, j]), nd) for j in range(df.shape[1])]
+    data = [column(df.iloc[:, j], nd) for j in range(df.shape[1])]
     if index:
         name = index_name if index_name is not None else (str(df.index.name) if df.index.name is not None else "")
         cols = [name] + cols
-        data = [col_fmt(list(df.index), nd)] + data
+        data = [column(df.index.to_series(), nd)] + data
     rows = [list(r) for r in zip(*data)] if data else []
     return {"cols": cols, "rows": rows}
 

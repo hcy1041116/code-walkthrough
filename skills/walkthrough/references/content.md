@@ -35,7 +35,7 @@ Every location in content and captures is an anchor resolved against the real fi
 
 - `"text"`: the one line containing `text` (must be unique in the file)
 - `"=text"`: the line whose stripped content equals `text` (for `)`, `"""`, `return d`)
-- `"text#n"`: the n-th occurrence
+- `"text#n"`: the n-th occurrence; text that itself ends in `#` and digits (a CSS colour `#333`) needs `#1` added
 - `("a", "b")`: lines from anchor a to anchor b inclusive; `["a", ("b", "c")]`: union
 
 Inside explanation text, `{{anchor}}`, `{{a..b}}` and `{{other.py:a..b}}` become "Line N–M" when rendering. Typed line numbers fail verification.

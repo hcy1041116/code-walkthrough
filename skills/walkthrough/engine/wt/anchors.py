@@ -20,7 +20,8 @@ def find(lines: list, anchor: str, where: str = "") -> int:
     hits = [i + 1 for i, ln in enumerate(lines) if (ln.strip() == pat if exact else pat in ln)]
     if nth is not None:
         if len(hits) < nth:
-            raise ValueError(f"{where}: anchor {anchor!r} occurs only {len(hits)} time(s)")
+            raise ValueError(f"{where}: anchor {anchor!r} occurs only {len(hits)} time(s); '#{nth}' at the end means "
+                             f"occurrence number {nth}, so to match text that ends in '#{nth}', add '#1'")
         return hits[nth - 1]
     if len(hits) != 1:
         raise ValueError(f"{where}: anchor {anchor!r} must occur exactly once, found on lines {hits}")
