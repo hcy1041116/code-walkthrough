@@ -1,0 +1,8 @@
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.ruff_cache/
+# outputs if someone runs the demo in place
+tests/demo/docs/walkthrough.html
+tests/demo/docs/walkthrough_tools/data/
+tests/demo/docs/walkthrough_tools/runs/
