@@ -34,12 +34,6 @@
 |---|---|
 | <img src="docs/images/walkthrough-mobile-dark.png" width="260" alt="手機寬度、深色模式的講解頁"> | <img src="docs/images/review-home.png" width="480" alt="複習中心首頁：今天到期、新卡、記憶盒分布"> |
 
-自己產生一次（不會動到你的 `~/learning`）：
-
-```bash
-uv run --with pygments --with pandas --with pillow python examples/make_readme_images.py
-```
-
 ## 安裝
 
 ```bash
